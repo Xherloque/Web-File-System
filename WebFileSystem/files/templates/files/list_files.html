@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_title %}{{ folder.name }}{% endblock %}
+{% block content %}
+{% if message %}
+    <p>{{ message }}</p>
+{% else %}
+<div class="row">
+    <div>
+        <h3>Subfolders</h3>
+        {% for subfolder in subfolders %}
+            <div>
+                <a href="{% url 'files:list_files' subfolder.id %}"><img src="{% static 'images/folder-icon.png' %}" alt="Folder Icon" width="40">
+                <b>{{ subfolder.name }}</b>
+                <a href="{% url 'files:list_files' subfolder.id %}" class="btn btn-primary">Open</a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Options
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-item">
+                                {% if subfolder and subfolder.id %}
+                                    <a href="{% url 'files:rename_folder' subfolder.id %}">Rename</a>
+                                {% else %}
+                                    <a href="{% url 'files:rename_folder_no_folder' %}">Rename</a>
+                                {% endif %}
+                            </li>
+                            <li class="dropdown-item">
+                                {% if subfolder and subfolder.id %}
+                                    <a href="{% url 'files:delete_folder' subfolder.id %}">Delete</a>
+                                {% else %}
+                                    <a href="{% url 'files:delete_folder_no_folder' %}">Delete</a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <p>No subfolders available.</p>
+        {% endfor %}
+    </div>
+
+    {% for file in files %}
+        <div class="col-md-3 card-container">
+            <div class="card">
+                <img src="{% static 'images/file-icon.png' %}" alt="File Icon" width="40">
+                <div class="card-body">
+                    <h5 class="card-title">{{ file.original_name }}</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Options
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% if file and file.id %}
+                                <li><a class="dropdown-item delete-file-btn" href="{% url 'files:delete_file' file.id %}" data-file-id="{{ file.id }}">Delete</a></li>
+                                <li><a class="dropdown-item delete-file-btn" href="{% url 'files:rename_file' file.id %}" data-file-id="{{ file.id }}">Rename</a></li>
+                            {% else %}
+                                <li><a class="dropdown-item delete-file-btn" href="{% url 'files:delete_file_no_file' %}" data-file-id="{{ file.id }}">Delete</a></li>
+                                <li><a class="dropdown-item delete-file-btn" href="{% url 'files:rename_file_no_file' %}" data-file-id="{{ file.id }}">Rename</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No files in this folder.</p>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_title %}User : {{ request.user }}{% endblock %}
+{% block content %}
+<div class="row">
+    {% for folder in folders %}
+        <div class="col-md-3 card-container">
+            <div class="card">
+                <img src="{% static 'images/folder-icon.png' %}" alt="Folder Icon">
+                <div class="card-body">
+                    <h5 class="card-title">{{ folder.name }}</h5>
+                    <a href="{% url 'files:list_files' folder.id %}" class="btn btn-primary">Open</a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Options
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                {% if folder and folder.id %}
+                                    <a href="{% url 'files:rename_folder' folder.id %}">Rename</a>
+                                {% else %}
+                                    <a href="{% url 'files:rename_folder_no_folder' %}">Rename</a>
+                                {% endif %}
+                            </li>
+                            <li class="nav-item">
+                                {% if folder and folder.id %}
+                                    <a href="{% url 'files:delete_folder' folder.id %}">Delete</a>
+                                {% else %}
+                                    <a href="{% url 'files:delete_folder_no_folder' %}">Delete</a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No folders to display.</p>
+    {% endfor %}
+</div>
+{% endblock %}

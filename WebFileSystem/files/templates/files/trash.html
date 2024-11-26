@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Trash</h2>
+<h3>Folders</h3>
+<ul>
+    {% for folder in folders %}
+        <li>
+            {{ folder.name }} 
+            <a href="{% url 'files:restore_folder' folder.id %}">Restore</a> | 
+            <a href="{% url 'files:permanently_delete_folder' folder.id %}">Permanently Delete</a>
+        </li>
+    {% empty %}
+        <li>No folders in Trash.</li>
+    {% endfor %}
+</ul>
+<h3>Files</h3>
+<ul>
+    {% for file in files %}
+        <li>
+            {{ file.original_name }} 
+            <a href="{% url 'files:restore_file' file.id %}">Restore</a> | 
+            <a href="{% url 'files:permanently_delete_file' file.id %}">Permanently Delete</a>
+        </li>
+    {% empty %}
+        <li>No files in Trash.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

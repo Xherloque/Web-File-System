@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Rename File</h2>
+<form method="post">
+    {% csrf_token %}
+    <label for="name">New Name:</label>
+    <input type="text" name="name" id="name" value="{{ file.name }}" class="form-control">
+    <button type="submit" class="btn btn-primary">Rename</button>
+</form>
+{% endblock %}
