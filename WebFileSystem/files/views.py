@@ -5,8 +5,12 @@ from .models import Folder, UploadedFile
 from .forms import FolderForm, FileUploadForm
 from django.contrib import messages
 from django.utils.timezone import now
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, FileResponse, HttpResponseRedirect
+from django.urls import reverse
 import psutil
+import zipfile
+from io import BytesIO
+import os
 
 @login_required
 def list_folders(request):
@@ -19,7 +23,7 @@ def create_folder(request):
     Handles the creation of new folders for the logged-in user.
     """
     if request.method == "POST":
-        form = FolderForm(request.POST)
+        form = FolderForm(request.POST,user = request.user)
         if form.is_valid():
             # Save the folder, ensuring it's linked to the logged-in user
             folder = form.save(commit=False)
@@ -30,7 +34,7 @@ def create_folder(request):
         else:
             messages.error(request, "Failed to create folder. Please try again.")
     else:
-        form = FolderForm()
+        form = FolderForm(user = request.user)
     
     # Fetch only the folders belonging to the current user
     user_folders = Folder.objects.filter(user=request.user)
@@ -52,10 +56,10 @@ def upload_file(request, folder_id=None):
         folder, created = Folder.objects.get_or_create(user=request.user, name="Default Folder")
 
     if request.method == "POST":
-        form = FileUploadForm(request.POST, request.FILES)
+        form = FileUploadForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             uploaded_file = form.save(commit=False)
-            uploaded_file.folder = folder
+            uploaded_file.folder = form.cleaned_data['folder']  # Set the selected folder from the form
             uploaded_file.user = request.user
             uploaded_file.original_name = request.FILES['file'].name
             uploaded_file.save()
@@ -64,7 +68,7 @@ def upload_file(request, folder_id=None):
         else:
             messages.error(request, "Failed to upload file. Please check the form.")
     else:
-        form = FileUploadForm(initial={'folder': folder})
+        form = FileUploadForm(initial={'folder': folder},user=request.user)
 
     return render(request, 'files/upload_file.html', {'form': form, 'folder': folder})
 
@@ -96,6 +100,30 @@ def rename_folder(request, folder_id = None):
             messages.success(request, f"Folder renamed to '{new_name}'.")
             return redirect('/')
     return render(request, 'files/rename_folder.html', {'folder': folder})
+
+
+@login_required
+def download_folder(request, folder_id):
+    # Get the folder and its files
+    folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+    files = folder.files.filter(is_deleted=False)
+    
+    # Create an in-memory ZIP file
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for file in files:
+            file_path = file.file.path
+            if os.path.exists(file_path):
+                zip_file.write(file_path, arcname=file.original_name)
+            else:
+                # Handle missing file
+                messages.error(request, f"File {file.original_name} is missing.")
+                return redirect('files:list_folders')
+    
+    # Prepare ZIP file for download
+    zip_buffer.seek(0)
+    response = FileResponse(zip_buffer, as_attachment=True, filename=f"{folder.name}.zip")
+    return response
 
 
 @login_required
@@ -138,6 +166,27 @@ def rename_file(request, file_id):
             return redirect('files:list_folders')
     return render(request, 'files/rename_file.html', {'file': file})
 
+
+@login_required
+def download_file(request, file_id):
+    """
+    Handles file download functionality.
+    """
+    # Get the uploaded file and make sure it belongs to the current user
+    uploaded_file = get_object_or_404(UploadedFile, id=file_id)
+    
+    # Check if the uploaded file belongs to the logged-in user via the associated folder
+    if uploaded_file.folder.user != request.user:
+        # Optionally, raise a PermissionDenied error or redirect with an error message
+        return HttpResponse("Permission denied", status=403)
+
+    # Open the file and return it as a response
+    file_path = uploaded_file.file.path
+    response = FileResponse(open(file_path, 'rb'), as_attachment=True, filename=uploaded_file.original_name)
+    
+    return response
+
+
 @login_required
 def trash(request):
     folders = Folder.objects.filter(user=request.user, is_deleted=True)
@@ -155,10 +204,15 @@ def restore_folder(request, folder_id):
 
 @login_required
 def restore_file(request, file_id):
-    file = get_object_or_404(UploadedFile, id=file_id, folder__user=request.user, is_deleted=True)
+    # Get the file if it's deleted
+    file = get_object_or_404(UploadedFile, id=file_id,folder__user=request.user, is_deleted=True)
+
+    # Restore the file by setting is_deleted to False
     file.restore()
-    messages.success(request, f"File '{file.name}' restored.")
-    return redirect('files:trash')
+    file.save()
+
+    # Redirect to the folder view or wherever you want
+    return HttpResponseRedirect(reverse('files:trash'))
 
 @login_required
 def permanently_delete_folder(request, folder_id):
@@ -171,7 +225,7 @@ def permanently_delete_folder(request, folder_id):
 def permanently_delete_file(request, file_id):
     file = get_object_or_404(UploadedFile, id=file_id, folder__user=request.user, is_deleted=True)
     file.delete()
-    messages.success(request, f"File '{file.name}' permanently deleted.")
+    messages.success(request, f"File '{file.original_name}' permanently deleted.")
     return redirect('files:trash')
 
 

@@ -15,14 +15,15 @@
                             Options
                         </button>
                         <ul class="dropdown-menu">
-                            <li class="nav-item">
+                            <li class="dropdown-item">
                                 {% if folder and folder.id %}
+                                    <a href="{% url 'files:download_folder' folder.id %}">Download Folder</a>
                                     <a href="{% url 'files:rename_folder' folder.id %}">Rename</a>
                                 {% else %}
                                     <a href="{% url 'files:rename_folder_no_folder' %}">Rename</a>
                                 {% endif %}
                             </li>
-                            <li class="nav-item">
+                            <li class="dropdown-item">
                                 {% if folder and folder.id %}
                                     <a href="{% url 'files:delete_folder' folder.id %}">Delete</a>
                                 {% else %}

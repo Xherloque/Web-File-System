@@ -20,6 +20,7 @@
                         <ul class="dropdown-menu">
                             <li class="dropdown-item">
                                 {% if subfolder and subfolder.id %}
+                                    <a href="{% url 'files:download_folder' subfolder.id %}">Download Folder</a>
                                     <a href="{% url 'files:rename_folder' subfolder.id %}">Rename</a>
                                 {% else %}
                                     <a href="{% url 'files:rename_folder_no_folder' %}">Rename</a>
@@ -55,6 +56,7 @@
                             {% if file and file.id %}
                                 <li><a class="dropdown-item delete-file-btn" href="{% url 'files:delete_file' file.id %}" data-file-id="{{ file.id }}">Delete</a></li>
                                 <li><a class="dropdown-item delete-file-btn" href="{% url 'files:rename_file' file.id %}" data-file-id="{{ file.id }}">Rename</a></li>
+                                <a href="{% url 'files:download_file' file.id %}">Download File</a>
                             {% else %}
                                 <li><a class="dropdown-item delete-file-btn" href="{% url 'files:delete_file_no_file' %}" data-file-id="{{ file.id }}">Delete</a></li>
                                 <li><a class="dropdown-item delete-file-btn" href="{% url 'files:rename_file_no_file' %}" data-file-id="{{ file.id }}">Rename</a></li>
