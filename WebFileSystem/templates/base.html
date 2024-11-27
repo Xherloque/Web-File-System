@@ -50,6 +50,9 @@
                         </li>
 
                     </li>
+                    {% if user.is_staff %}
+                        <li><a href="{% url 'files:system_monitoring' %}">System Monitoring</a></li>
+                    {% endif %}
                     <li class="nav-item"><a href="{% url 'files:create_folder' %}">Create Folder</a></li> 
                     <li class="nav-item"><a class="nav-link" href="{% url 'files:trash' %}">Trash</a></li>
 

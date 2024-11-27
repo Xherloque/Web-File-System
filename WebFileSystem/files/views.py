@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from .models import Folder, UploadedFile
 from .forms import FolderForm, FileUploadForm
 from django.contrib import messages
 from django.utils.timezone import now
 from django.http import JsonResponse
+import psutil
 
 @login_required
 def list_folders(request):
@@ -172,6 +174,21 @@ def permanently_delete_file(request, file_id):
     messages.success(request, f"File '{file.name}' permanently deleted.")
     return redirect('files:trash')
 
+
+@staff_member_required
+def system_monitoring(request):
+    # Get system statistics
+    disk_usage = psutil.disk_usage('/')
+    cpu_usage = psutil.cpu_percent(interval=1)
+
+    context = {
+        'disk_total': disk_usage.total // (1024 ** 3),  # Total disk space in GB
+        'disk_used': disk_usage.used // (1024 ** 3),   # Used disk space in GB
+        'disk_free': disk_usage.free // (1024 ** 3),   # Free disk space in GB
+        'disk_percent': disk_usage.percent,           # Disk usage percentage
+        'cpu_percent': cpu_usage,                     # CPU usage percentage
+    }
+    return render(request, 'files/system_monitoring.html', context)
 
 
 # AJAX folder deletion view

@@ -17,6 +17,7 @@ urlpatterns = [
     path('delete-file/', views.delete_file, name='delete_file_no_file'),  # No folder ID
     path('rename-file/<int:file_id>/', views.rename_file, name='rename_file'),
     path('rename-file/', views.rename_file, name='rename_file_no_file'),  # No folder ID
+    path('system-monitoring/', views.system_monitoring, name='system_monitoring'),
     path('trash/', views.trash, name='trash'),
     path('restore-folder/<int:folder_id>/', views.restore_folder, name='restore_folder'),
     path('restore-file/<int:file_id>/', views.restore_file, name='restore_file'),

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>System Monitoring</h2>
+<div>
+    <h3>Disk Usage</h3>
+    <p>Total: {{ disk_total }} GB</p>
+    <p>Used: {{ disk_used }} GB</p>
+    <p>Free: {{ disk_free }} GB</p>
+    <p>Usage: {{ disk_percent }}%</p>
+</div>
+<div>
+    <h3>CPU Usage</h3>
+    <p>Current CPU Utilization: {{ cpu_percent }}%</p>
+</div>
+{% endblock %}
